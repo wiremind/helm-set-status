@@ -31,7 +31,7 @@ func NewRootCmd(out io.Writer, args []string) *cobra.Command {
 	}
 	flags := cmd.PersistentFlags()
 	flags.Parse(args)
-	settings = new(EnvSettings)
+	settings = New()
 	settings.AddFlags(flags)
 
 	return cmd

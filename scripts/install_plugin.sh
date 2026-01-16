@@ -3,13 +3,26 @@
 set -e
 
 plugin_version=$(sed -n -e 's/version:[ "]*\([^"]*\).*/\1/p' ${HELM_PLUGIN_DIR}/plugin.yaml)
-SET_STATUS_VERSION=${SET_STATUS_VERSION:-$plugin_version}
+SET_STATUS_VERSION=${SET_STATUS_VERSION:-${HELM_PLUGIN_VERSION:-$plugin_version}}
 
-os_arch=$(uname -sp | tr '[:upper:] ' '[:lower:]-' | sed 's/x86_64/amd64/')
+os=$(uname -s | tr '[:upper:]' '[:lower:]')
+arch=$(uname -m | tr '[:upper:]' '[:lower:]')
+
+case "$arch" in
+  x86_64)
+    arch="amd64"
+    ;;
+  aarch64|arm64)
+    arch="arm64"
+    ;;
+esac
+
+os_arch="${os}-${arch}"
 release_file="helm-set-status-${os_arch}.tgz"
-url="https://github.com/k3s-io/helm-set-status/releases/download/v${SET_STATUS_VERSION}/${release_file}"
+repo="wiremind/helm-set-status"
+url="https://github.com/${repo}/releases/download/v${SET_STATUS_VERSION}/${release_file}"
 
-mkdir -p ${dir}
+mkdir -p "${HELM_PLUGIN_DIR}"
 
 if command -v wget; then
   wget -qO - ${url} | tar -zxvC ${HELM_PLUGIN_DIR}

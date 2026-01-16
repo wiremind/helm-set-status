@@ -1,0 +1,61 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        goos: [linux, darwin]
+        goarch: [amd64, arm64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          export CGO_ENABLED=0
+          GOOS="${{ matrix.goos }}" GOARCH="${{ matrix.goarch }}" \
+            go build -trimpath -ldflags "-s -w" -o dist/helm-set-status ./cmd/helm-set-status
+          tar -czvf "dist/helm-set-status-${{ matrix.goos }}-${{ matrix.goarch }}.tgz" -C dist helm-set-status
+          rm -f dist/helm-set-status
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: helm-set-status-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/helm-set-status-${{ matrix.goos }}-${{ matrix.goarch }}.tgz
+          if-no-files-found: error
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.tgz

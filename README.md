@@ -12,7 +12,7 @@ Useful when helm or your cluster ran into problems mid-update and things are stu
 ## Install
 
 ```console
-helm plugin install https://github.com/k3s-io/helm-set-status
+helm plugin install https://github.com/wiremind/helm-set-status
 ```
 
 ## Usage
@@ -20,3 +20,9 @@ helm plugin install https://github.com/k3s-io/helm-set-status
 ```console
 helm set-status RELEASE STATUS [flags]
 ```
+
+### Flags
+
+- `-n, --namespace`: namespace scope for this request (defaults to `$HELM_NAMESPACE`).
+- `--kube-context`: name of the kubeconfig context (defaults to `$HELM_KUBECONTEXT`).
+- `--kubeconfig`: path to the kubeconfig file (defaults to `$KUBECONFIG`).
